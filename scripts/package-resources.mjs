@@ -87,6 +87,7 @@ export async function copyResources(
     ["docs/MEDIA_SOURCES.md", "README.md"],
     ["docs/MEDIA_BUILD.md", "MEDIA_BUILD.md"],
     ["scripts/rebuild-media-mac.sh", "rebuild-media-mac.sh"],
+    ["scripts/rebuild-media-portable.sh", "rebuild-media-portable.sh"],
     ["docs/media-runtime.json", "runtime.json"],
   ]) {
     await copy(relative, path.join(mediaSources, name));

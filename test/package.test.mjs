@@ -34,6 +34,7 @@ async function fixture(t) {
     "docs/MEDIA_SOURCES.md",
     "docs/MEDIA_BUILD.md",
     "scripts/rebuild-media-mac.sh",
+    "scripts/rebuild-media-portable.sh",
     "node_modules/electron/dist/LICENSE",
     "node_modules/electron/dist/LICENSES.chromium.html",
     ...["fflate", "saxes", "xmlchars"].map(

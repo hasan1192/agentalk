@@ -37,7 +37,7 @@ npm run build
 npm start
 ```
 
-The explicit Electron install step also works when npm lifecycle scripts are disabled. Media setup downloads pinned FFmpeg/FFprobe binaries and corresponding source archives and verifies their hashes. Internet access is required for dependency and media setup.
+The explicit Electron install step also works when npm lifecycle scripts are disabled. Media setup verifies pinned source archive hashes. On Windows/Linux it builds FFmpeg/FFprobe from those sources, so the native build tools listed in [docs/MEDIA_BUILD.md](docs/MEDIA_BUILD.md) are required. The macOS path uses the pinned preview binary when available; its legacy mirror is currently unavailable, so a fresh macOS setup needs the documented source rebuild. Internet access is required for dependency and media setup.
 
 For development, run `npm run dev` after setup.
 

@@ -6,14 +6,14 @@ import { execFileSync } from "node:child_process";
 import manifest from "../docs/media-runtime.json" with { type: "json" };
 const base = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const asset = manifest.assets[`${process.platform}-${process.arch}`];
-if (!asset)
+if (!asset || asset.supported === false)
   throw new Error("No media runtime is configured for this platform.");
 const root = path.join(base, "vendor", "media");
 const bin = path.join(root, "bin");
 await fs.mkdir(bin, { recursive: true });
 const archive = path.join(
   root,
-  asset.url.endsWith("zip") ? "runtime.zip" : "runtime.tar.gz",
+  asset.url?.endsWith("zip") ? "runtime.zip" : "runtime.tar.gz",
 );
 async function download(item, destination) {
   const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
@@ -30,21 +30,26 @@ async function download(item, destination) {
     throw new Error("Media archive SHA-256 mismatch.");
   await fs.writeFile(destination, bytes);
 }
-await download(asset, archive);
-const entries = execFileSync("tar", ["-tf", archive], { encoding: "utf8" })
-  .trim()
-  .split("\n");
-if (entries.some((entry) => !/^(ffmpeg|ffprobe)(\.exe)?$/.test(entry)))
-  throw new Error("Unexpected media archive content.");
-execFileSync("tar", ["-xf", archive, "-C", bin]);
-for (const name of ["ffmpeg", "ffprobe"]) {
-  const file = path.join(
-    bin,
-    name + (process.platform === "win32" ? ".exe" : ""),
-  );
-  const config = execFileSync(file, ["-buildconf"], { encoding: "utf8" });
-  if (config.includes("--enable-nonfree") || config.includes("--enable-gpl"))
-    throw new Error("Media build contains restricted components.");
+const sourcesOnly = process.argv.includes("--sources-only");
+const buildNative =
+  process.platform === "win32" || process.platform === "linux";
+if (!sourcesOnly && !buildNative) {
+  await download(asset, archive);
+  const entries = execFileSync("tar", ["-tf", archive], { encoding: "utf8" })
+    .trim()
+    .split("\n");
+  if (entries.some((entry) => !/^(ffmpeg|ffprobe)(\.exe)?$/.test(entry)))
+    throw new Error("Unexpected media archive content.");
+  execFileSync("tar", ["-xf", archive, "-C", bin]);
+  for (const name of ["ffmpeg", "ffprobe"]) {
+    const file = path.join(
+      bin,
+      name + (process.platform === "win32" ? ".exe" : ""),
+    );
+    const config = execFileSync(file, ["-buildconf"], { encoding: "utf8" });
+    if (config.includes("--enable-nonfree") || config.includes("--enable-gpl"))
+      throw new Error("Media build contains restricted components.");
+  }
 }
 const sources = path.join(root, "sources");
 await fs.mkdir(sources, { recursive: true });
@@ -58,6 +63,7 @@ for (const [relative, name] of [
   ["docs/MEDIA_SOURCES.md", "README.md"],
   ["docs/MEDIA_BUILD.md", "MEDIA_BUILD.md"],
   ["scripts/rebuild-media-mac.sh", "rebuild-media-mac.sh"],
+  ["scripts/rebuild-media-portable.sh", "rebuild-media-portable.sh"],
   ["docs/media-runtime.json", "runtime.json"],
 ]) {
   await fs.copyFile(path.join(base, relative), path.join(sources, name));
@@ -69,4 +75,25 @@ await fs.copyFile(
   path.join(base, "docs", "media-runtime.json"),
   path.join(root, "runtime.json"),
 );
-console.log(`Media runtime ${manifest.version} ready: ${bin}`);
+if (!sourcesOnly && buildNative) {
+  const build = await fs.mkdtemp(path.join(root, "build-"));
+  try {
+    execFileSync(
+      "bash",
+      [
+        path.join(base, "scripts/rebuild-media-portable.sh"),
+        sources,
+        build,
+        bin,
+      ],
+      { stdio: "inherit" },
+    );
+  } finally {
+    await fs.rm(build, { recursive: true, force: true });
+  }
+}
+console.log(
+  sourcesOnly
+    ? `Verified media sources ready: ${sources}`
+    : `Media runtime ${manifest.version} ready: ${bin}`,
+);

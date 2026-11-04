@@ -119,6 +119,10 @@ try {
     path.join(base, "scripts", "rebuild-media-mac.sh"),
     path.join(mediaSources, "rebuild-media-mac.sh"),
   );
+  await fs.copyFile(
+    path.join(base, "scripts", "rebuild-media-portable.sh"),
+    path.join(mediaSources, "rebuild-media-portable.sh"),
+  );
   await fs.cp(
     path.join(base, "docs", "licenses"),
     path.join(mediaSources, "licenses"),

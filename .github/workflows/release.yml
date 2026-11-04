@@ -21,7 +21,7 @@ jobs:
   build:
     name: Build and test ${{ matrix.platform }} x64
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 40
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -46,8 +46,39 @@ jobs:
         run: npm ci
       - name: Install Electron runtime
         run: node node_modules/electron/install.js
-      - name: Install verified media runtime and sources
+      - name: Restore verified native media build
+        id: media-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: vendor/media
+          key: native-media-${{ runner.os }}-x64-${{ hashFiles('docs/media-runtime.json', 'scripts/rebuild-media-portable.sh') }}
+      - name: Install Linux media build tools
+        if: runner.os == 'Linux' && steps.media-cache.outputs.cache-hit != 'true'
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build pkg-config nasm
+      - name: Install Windows media build tools
+        if: runner.os == 'Windows' && steps.media-cache.outputs.cache-hit != 'true'
+        uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e # v2
+        with:
+          msystem: MINGW64
+          path-type: inherit
+          update: true
+          install: base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-pkgconf mingw-w64-x86_64-nasm
+      - name: Build verified Linux media tools from pinned sources
+        if: runner.os == 'Linux' && steps.media-cache.outputs.cache-hit != 'true'
         run: npm run media:setup
+      - name: Build verified Windows media tools from pinned sources
+        if: runner.os == 'Windows' && steps.media-cache.outputs.cache-hit != 'true'
+        shell: msys2 {0}
+        run: npm run media:setup
+      - name: Verify cached source archives and refresh build notices
+        if: steps.media-cache.outputs.cache-hit == 'true'
+        run: npm run media:setup -- --sources-only
+      - name: Save verified native media build
+        if: steps.media-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: vendor/media
+          key: ${{ steps.media-cache.outputs.cache-primary-key }}
       - name: Core, media, document and vault tests
         run: npm test
       - name: Build portable application and verify licenses
