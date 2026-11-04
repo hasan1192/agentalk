@@ -17,12 +17,14 @@ mediaJobs="$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 2)"
 mediaTarget=x86_64-linux-gcc
 mediaSuffix=
 mediaStaticFlags=
+mediaThreadOptions=(--enable-pthreads)
 case "$(uname -s)" in
   Linux) ;;
   MINGW64*|MSYS*)
     mediaTarget=x86_64-win64-gcc
     mediaSuffix=.exe
     mediaStaticFlags=-static
+    mediaThreadOptions=(--disable-pthreads --enable-w32threads)
     ;;
   *) echo 'Use Linux x64 or an MSYS2 MINGW64 shell.' >&2; exit 1 ;;
 esac
@@ -75,7 +77,7 @@ cmake --install "$mediaBuildDirectory/webp-build"
 cd "$mediaBuildDirectory/src/ffmpeg"
 ./configure --prefix="$mediaPrefix" --disable-gpl --disable-nonfree --disable-version3 --disable-autodetect \
   --enable-static --disable-shared --enable-ffmpeg --enable-ffprobe --disable-ffplay --disable-doc --disable-debug \
-  --enable-zlib --enable-libopus --enable-libvpx --enable-libwebp --enable-pthreads \
+  --enable-zlib --enable-libopus --enable-libvpx --enable-libwebp "${mediaThreadOptions[@]}" \
   --pkg-config-flags=--static --extra-cflags="-I$mediaPrefix/include" --extra-ldflags="-L$mediaPrefix/lib $mediaStaticFlags"
 make -j"$mediaJobs"
 for mediaName in ffmpeg ffprobe; do
