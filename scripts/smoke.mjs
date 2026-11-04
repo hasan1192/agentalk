@@ -95,6 +95,13 @@ try {
   let page = await application.firstWindow();
   page.on("pageerror", (e) => errors.push(e.message));
   await page.locator(".app-shell").waitFor();
+  // Initial native bounds can be clamped to the CI desktop's work area.
+  // Use a known content size so the wide-layout checks exercise the 760px cap
+  // independently of platform window borders and the runner's screen size.
+  await application.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].setContentSize(1440, 900);
+  });
+  await page.waitForFunction(() => window.innerWidth === 1440);
   const firstSnapshot = await page.evaluate(() => window.agentalk.snapshot());
   // Opening the UI must not trigger a Keychain permission query.
   assert.equal(firstSnapshot.vaultAvailable, null);
