@@ -1,0 +1,75 @@
+{
+  "version": "8.0.3",
+  "release": "https://github.com/AtlasYang/ffmpeg-static-builds/releases/tag/ffmpeg-8.0.3-build4",
+  "source": "https://github.com/AtlasYang/ffmpeg-static-builds/tree/ffmpeg-8.0.3-build4",
+  "license": "LGPL-2.1-or-later",
+  "assets": {
+    "linux-arm64": {
+      "url": "https://github.com/AtlasYang/ffmpeg-static-builds/releases/download/ffmpeg-8.0.3-build4/ffmpeg-8.0.3-linux-arm64.tar.gz",
+      "sha256": "7e462ad41595c3f822d372227146267edc147e25abb01c2a2eb94b158c22ec37"
+    },
+    "linux-x64": {
+      "url": "https://github.com/AtlasYang/ffmpeg-static-builds/releases/download/ffmpeg-8.0.3-build4/ffmpeg-8.0.3-linux-x64.tar.gz",
+      "sha256": "2612ed26322c864a7411c3578b74fe7f229127e6f9f906d3aa994937a4c9620e"
+    },
+    "darwin-arm64": {
+      "url": "https://github.com/AtlasYang/ffmpeg-static-builds/releases/download/ffmpeg-8.0.3-build4/ffmpeg-8.0.3-macos-arm64.tar.gz",
+      "sha256": "26f6269b117a51c5fdfd3a870c4e0a62b99f0575740a3933fc3d852f0a3f80b1"
+    },
+    "darwin-x64": {
+      "url": "https://github.com/AtlasYang/ffmpeg-static-builds/releases/download/ffmpeg-8.0.3-build4/ffmpeg-8.0.3-macos-x64.tar.gz",
+      "sha256": "b84b4515aaf2fe443a76445f02d05544a384dcd46cc6059fb8a1a4f9aaa3035d"
+    },
+    "win32-x64": {
+      "url": "https://github.com/AtlasYang/ffmpeg-static-builds/releases/download/ffmpeg-8.0.3-build4/ffmpeg-8.0.3-win-x64.zip",
+      "sha256": "fd3473736674343cd1948eb45f28b46f377616432a5cc15eb896bdaabea506f2"
+    }
+  },
+  "sources": [
+    {
+      "url": "https://codeload.github.com/madler/zlib/tar.gz/refs/tags/v1.3.1",
+      "sha256": "17e88863f3600672ab49182f217281b6fc4d3c762bde361935e436a95214d05c",
+      "file": "zlib.tar.gz"
+    },
+    {
+      "url": "https://codeload.github.com/xiph/ogg/tar.gz/refs/tags/v1.3.6",
+      "sha256": "95b643da661155d79db9de2fca55daed3a8d491039829def246aacb3d9201c81",
+      "file": "ogg.tar.gz"
+    },
+    {
+      "url": "https://codeload.github.com/xiph/vorbis/tar.gz/refs/tags/v1.3.7",
+      "sha256": "270c76933d0934e42c5ee0a54a36280e2d87af1de3cc3e584806357e237afd13",
+      "file": "vorbis.tar.gz"
+    },
+    {
+      "url": "https://codeload.github.com/xiph/opus/tar.gz/refs/tags/v1.6.1",
+      "sha256": "bf0b97ec7a65890b8db90ef94c4d6c18de12584c3085031953a10986f5917745",
+      "file": "opus.tar.gz"
+    },
+    {
+      "url": "https://codeload.github.com/webmproject/libvpx/tar.gz/refs/tags/v1.17.0",
+      "sha256": "1020f184046187baa2985dbde38e0691f49c44088bca7a1842b0236c6081dc0a",
+      "file": "vpx.tar.gz"
+    },
+    {
+      "url": "https://codeload.github.com/webmproject/libwebp/tar.gz/refs/tags/v1.6.0",
+      "sha256": "93a852c2b3efafee3723efd4636de855b46f9fe1efddd607e1f42f60fc8f2136",
+      "file": "webp.tar.gz"
+    },
+    {
+      "url": "https://code.videolan.org/videolan/dav1d/-/archive/1.5.4/dav1d-1.5.4.tar.gz",
+      "sha256": "a1d5b63d2d38ec9bd03acf643caa51fa22edd1e89c5a109c4807717216bbec07",
+      "file": "dav1d.tar.gz"
+    },
+    {
+      "url": "https://aomedia.googlesource.com/aom/+archive/v3.15.0.tar.gz",
+      "sha256": "454aa0bdc460db0007f9c8bad5e0f2efff4bd07f9e3db6f624f3a9a5be2c89c7",
+      "file": "aom.tar.gz"
+    },
+    {
+      "file": "ffmpeg-8.0.3.tar.xz",
+      "url": "https://ffmpeg.org/releases/ffmpeg-8.0.3.tar.xz",
+      "sha256": "6136812ea6d4e68bdba27e33c2a94382711cdf4f8602ffef056ff792bd6f9818"
+    }
+  ]
+}
