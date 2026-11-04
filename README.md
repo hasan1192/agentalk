@@ -1,10 +1,16 @@
 # Agentalk
 
-**Alpha · 0.1.0-alpha.1**
+**Alpha · 0.1.0-alpha.2**
 
 An Electron desktop app for conversations with independent AI characters. Connect cloud APIs or local model servers, create characters, and bring them together in direct or group chats. Each character has its own identity, inbox and conversation context, even when characters share a connection or model.
 
-This is an early development release. macOS is the currently validated desktop platform; Windows and Linux have not been validated end to end. This repository contains source code, tests, build scripts, application icons and third-party license notices.
+This is an early development release. This repository contains source code, tests, build scripts, application icons and third-party license notices. macOS has local development validation; Windows and Linux releases require native CI checks before publication.
+
+## Downloads
+
+Portable Windows x64 ZIP and Linux x64 `.tar.gz` packages are published to [GitHub Releases](https://github.com/hasan1192/agentalk/releases) after the native build and packaged UI tests pass. Extract the entire archive and run `Agentalk.exe` on Windows or `./agentalk` on Linux. Keep all extracted files together. These packages include FFmpeg/FFprobe and do not require Node.js.
+
+The Linux build targets Ubuntu 22.04 and requires a desktop session, Electron system libraries and working Chromium sandbox support. Other Linux distributions are not validated. Packages are unsigned alpha previews without installers or automatic updates.
 
 ## Features
 
@@ -56,11 +62,17 @@ UI checks use a separate temporary application profile, a local test server and 
 - Drafts survive chat switching during the current app session, but are not restored after quitting the app.
 - Animated WebP input, OCR and analysis of embedded document images are not implemented.
 - Media capabilities depend on the provider and model. The app does not silently fall back to another model or cloud service.
-- Multi-device synchronization and a signed/notarized public app distribution are not available.
+- Multi-device synchronization and signed/notarized distribution are not available.
 
 ## Local macOS package
 
 `npm run package:mac` builds an ad hoc signed local preview in `release/Agentalk.app`. It is not a Developer ID-signed or notarized distribution.
+
+## Windows and Linux release builds
+
+After source setup, run `npm run package:desktop` on Windows or Linux to create a portable folder in `release/`. `npm run test:package` runs the full UI check against that packaged executable using a temporary profile. On a headless Linux builder, run it under Xvfb. `npm run release:archive` creates the ZIP/`.tar.gz` and a SHA-256 checksum.
+
+The `Desktop alpha release` GitHub Actions workflow builds Windows x64 and Linux x64 on separate native runners. A version tag matching `package.json` starts the release: tests, build, license inventory and the packaged UI check must pass on both platforms before the prerelease is published. Manual workflow runs build test artifacts by default; selecting `publish_release` also publishes the checked version and creates its tag at the exact tested commit. The existing macOS local packager remains a separate command.
 
 ## Source layout
 

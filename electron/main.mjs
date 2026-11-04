@@ -201,8 +201,9 @@ async function createWindow() {
     minWidth: 660,
     minHeight: 700,
     backgroundColor: "#f8f9f6",
-    titleBarStyle: "hiddenInset",
-    trafficLightPosition: { x: 20, y: 21 },
+    ...(process.platform === "darwin"
+      ? { titleBarStyle: "hiddenInset", trafficLightPosition: { x: 20, y: 21 } }
+      : {}),
     webPreferences: {
       preload: path.join(base, "electron", "preload.cjs"),
       sandbox: true,

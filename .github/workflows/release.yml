@@ -1,0 +1,107 @@
+name: Desktop alpha release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      publish_release:
+        description: Publish a prerelease after both platform checks pass
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and test ${{ matrix.platform }} x64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2025
+            platform: windows
+          - os: ubuntu-22.04
+            platform: linux
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Verify tag matches package version
+        if: github.ref_type == 'tag'
+        shell: bash
+        run: node -e 'if (process.env.GITHUB_REF_NAME !== "v" + require("./package.json").version) process.exit(1)'
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Electron runtime
+        run: node node_modules/electron/install.js
+      - name: Install verified media runtime and sources
+        run: npm run media:setup
+      - name: Core, media, document and vault tests
+        run: npm test
+      - name: Build portable application and verify licenses
+        run: npm run package:desktop
+      - name: Test packaged Windows application with an isolated profile
+        if: runner.os == 'Windows'
+        run: npm run test:package
+      - name: Test packaged Linux application with an isolated profile
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum npm run test:package
+      - name: Archive the tested package
+        run: npm run release:archive
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: desktop-${{ matrix.platform }}-x64
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+          path: |
+            release/Agentalk-*.zip
+            release/Agentalk-*.tar.gz
+            release/Agentalk-*.sha256
+
+  publish:
+    name: Publish tested alpha packages
+    if: github.ref_type == 'tag' || inputs.publish_release
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: desktop-*
+          path: release-assets
+          merge-multiple: true
+      - name: Verify archive checksums
+        working-directory: release-assets
+        run: sha256sum --check *.sha256
+      - name: Publish prerelease after both platform checks pass
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          RELEASE_TAG="v$(node -p 'require("./package.json").version')"
+          if gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft > release-state.txt 2>/dev/null; then
+            test "$(cat release-state.txt)" = true
+            gh release upload "$RELEASE_TAG" release-assets/* --clobber
+          else
+            gh release create "$RELEASE_TAG" release-assets/* --target "$GITHUB_SHA" --draft --prerelease --title "Agentalk $RELEASE_TAG" --notes-file .github/RELEASE_NOTES.md
+          fi
+          gh release edit "$RELEASE_TAG" --draft=false --prerelease

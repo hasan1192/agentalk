@@ -1,6 +1,6 @@
 {
   "name": "agentalk",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "private": true,
   "description": "Independent AI voices. One shared conversation.",
   "type": "module",
@@ -14,6 +14,9 @@
     "format": "prettier --write src electron scripts test *.json *.ts *.html docs README.md",
     "brand:build": "node scripts/build-brand.mjs",
     "package:mac": "npm run build && node scripts/package-mac.mjs",
+    "package:desktop": "npm run build && node scripts/package-desktop.mjs",
+    "test:package": "node scripts/release-artifact.mjs test",
+    "release:archive": "node scripts/release-artifact.mjs archive",
     "media:setup": "node scripts/setup-media.mjs",
     "licenses:check": "node scripts/check-licenses.mjs"
   },

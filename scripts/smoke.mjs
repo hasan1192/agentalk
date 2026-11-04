@@ -73,6 +73,9 @@ const launchOptions = {
 const isolateTestVault = async (instance) =>
   instance.evaluate(({ safeStorage }) => {
     safeStorage.isEncryptionAvailable = () => true;
+    if (process.platform === "linux") {
+      safeStorage.getSelectedStorageBackend = () => "gnome_libsecret";
+    }
     safeStorage.encryptString = (value) =>
       Buffer.from(`agentalk-test-only:${value}`).map((byte) => byte ^ 0x5a);
     safeStorage.decryptString = (bytes) =>
