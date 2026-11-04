@@ -78,6 +78,10 @@ await fs.copyFile(
 if (!sourcesOnly && buildNative) {
   const build = await fs.mkdtemp(path.join(root, "build-"));
   try {
+    const shellPath = (file) =>
+      process.platform === "win32"
+        ? execFileSync("cygpath", ["-u", file], { encoding: "utf8" }).trim()
+        : file;
     execFileSync(
       "bash",
       [
@@ -85,7 +89,7 @@ if (!sourcesOnly && buildNative) {
         sources,
         build,
         bin,
-      ],
+      ].map(shellPath),
       { stdio: "inherit" },
     );
   } finally {
