@@ -104,6 +104,7 @@ test("portable package excludes credentials, conversations, test artifacts and s
     "app/electron/main.mjs",
     "app/electron/preload.cjs",
     "app/dist/assets/app.js",
+    "app/dist/brand/icon.png",
     "app/electron/bin/ffmpeg",
     "app/node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
     "LICENSES.chromium.html",

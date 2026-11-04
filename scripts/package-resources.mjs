@@ -47,6 +47,9 @@ export async function copyResources(
       path.join(application, "dist/assets", name),
     );
   }
+  // The renderer serves Vite's public assets from dist/, while the main
+  // process uses public/brand for native window icons.
+  await copy("public/brand", path.join(application, "dist/brand"));
   for (const dependency of ["fflate", "saxes", "xmlchars"]) {
     await copy(
       `node_modules/${dependency}`,
