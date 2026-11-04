@@ -84,6 +84,17 @@ const isolateTestVault = async (instance) =>
         .toString()
         .slice("agentalk-test-only:".length);
   });
+async function testWindow(instance) {
+  const page = await instance.firstWindow();
+  await page.locator(".app-shell").waitFor();
+  // Initial native bounds can be clamped to the CI desktop's work area.
+  // Apply the content size after every relaunch as well as the first launch.
+  await instance.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].setContentSize(1440, 900);
+  });
+  await page.waitForFunction(() => window.innerWidth === 1440);
+  return page;
+}
 let application;
 const errors = [];
 try {
@@ -92,16 +103,8 @@ try {
     timeout: 30000,
   });
   await isolateTestVault(application);
-  let page = await application.firstWindow();
+  let page = await testWindow(application);
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.locator(".app-shell").waitFor();
-  // Initial native bounds can be clamped to the CI desktop's work area.
-  // Use a known content size so the wide-layout checks exercise the 760px cap
-  // independently of platform window borders and the runner's screen size.
-  await application.evaluate(({ BrowserWindow }) => {
-    BrowserWindow.getAllWindows()[0].setContentSize(1440, 900);
-  });
-  await page.waitForFunction(() => window.innerWidth === 1440);
   const firstSnapshot = await page.evaluate(() => window.agentalk.snapshot());
   // Opening the UI must not trigger a Keychain permission query.
   assert.equal(firstSnapshot.vaultAvailable, null);
@@ -963,7 +966,7 @@ try {
   });
   application = await electron.launch(launchOptions);
   await isolateTestVault(application);
-  page = await application.firstWindow();
+  page = await testWindow(application);
   page.on("pageerror", (e) => errors.push(e.message));
   await page
     .getByRole("heading", { name: "Uçtan uca test masası", exact: true })
@@ -1107,10 +1110,10 @@ try {
     widthFixtures,
   );
   assert(heightDifference[1] > heightDifference[0] + 30);
+  const wideEdges = await assertMessageEdges();
   assert(
-    (await assertMessageEdges()).widths.every(
-      (width) => Math.abs(width - 760) < 1,
-    ),
+    wideEdges.widths.every((width) => Math.abs(width - 760) < 1),
+    JSON.stringify(wideEdges),
   );
   const originalGeometry = await application.evaluate(({ BrowserWindow }) => {
     const window = BrowserWindow.getAllWindows()[0];
@@ -2745,7 +2748,7 @@ try {
   await application.close();
   application = await electron.launch(launchOptions);
   await isolateTestVault(application);
-  page = await application.firstWindow();
+  page = await testWindow(application);
   await page
     .getByRole("heading", { name: "Uçtan uca test masası", exact: true })
     .waitFor();
@@ -3119,7 +3122,7 @@ try {
   await application.close();
   application = await electron.launch(launchOptions);
   await isolateTestVault(application);
-  page = await application.firstWindow();
+  page = await testWindow(application);
   page.on("pageerror", (error) => errors.push(error.message));
   await page.getByRole("button", { name: "Settings", exact: true }).waitFor();
   assert.equal(await page.evaluate(() => document.documentElement.lang), "en");
