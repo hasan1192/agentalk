@@ -22,10 +22,38 @@ async function download(item, destination) {
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
   }
-  const response = await fetch(item.url);
-  if (!response.ok)
-    throw new Error(`Media download failed: HTTP ${response.status}`);
-  const bytes = Buffer.from(await response.arrayBuffer());
+  let bytes;
+  try {
+    const response = await fetch(item.url, {
+      signal: AbortSignal.timeout(90000),
+    });
+    if (!response.ok)
+      throw new Error(`Media download failed: HTTP ${response.status}`);
+    bytes = Buffer.from(await response.arrayBuffer());
+  } catch (error) {
+    // Some hosted Windows networks time out on Node's chosen route. Keep TLS
+    // verification and the same pinned URL/hash, and retry over IPv4 with curl.
+    if (/HTTP (?:400|401|403|404|406)/.test(error.message)) throw error;
+    bytes = execFileSync(
+      "curl",
+      [
+        "--ipv4",
+        "--fail",
+        "--location",
+        "--silent",
+        "--show-error",
+        "--connect-timeout",
+        "30",
+        "--max-time",
+        "180",
+        "--retry",
+        "3",
+        "--retry-all-errors",
+        item.url,
+      ],
+      { maxBuffer: 192 * 1024 * 1024 },
+    );
+  }
   if (hash(bytes) !== item.sha256)
     throw new Error("Media archive SHA-256 mismatch.");
   await fs.writeFile(destination, bytes);
