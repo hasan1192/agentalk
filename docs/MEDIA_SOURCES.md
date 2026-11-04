@@ -6,7 +6,7 @@ The `MediaSources` directory is in `resources/` in Windows/Linux portable packag
 
 - `ffmpeg-8.0.3.tar.xz`: complete corresponding FFmpeg source, including license texts.
 - `rebuild-media-mac.sh`, `rebuild-media-portable.sh` and `MEDIA_BUILD.md`: Agentalk's independent native rebuild procedures and instructions.
-- Source archives for the pinned zlib, libogg, libvorbis, libopus, libvpx, dav1d, libaom and libwebp versions. The native Windows/Linux build links zlib, libopus, libvpx and libwebp; the other archives are also retained for the macOS preview build. Their copyright, licenses and patent notices are in `licenses/` and in each source archive.
+- Windows/Linux packages include the FFmpeg, zlib, libopus, libvpx and libwebp source archives used by their native build. The macOS preview additionally includes the pinned libogg, libvorbis, dav1d and libaom archives used by that build. `runtime.json` records the native source subset. Copyright, licenses and patent notices are in `licenses/` and in each supplied source archive.
 - Additional per-file FFmpeg/Opus notices, the Independent JPEG Group acknowledgment and license headers, dav1d's patent notice, and third-party notices from libaom/libvpx source archives. Optional tools, tests and architecture-specific code in those archives may not be compiled into the media executables.
 - `runtime.json`: exact upstream URLs and SHA-256 values for binaries and sources.
 - `ffmpeg-buildconf.txt` and `ffprobe-buildconf.txt`: configure options recorded directly from the included executables.

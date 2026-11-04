@@ -48,19 +48,34 @@ jobs:
         run: node node_modules/electron/install.js
       - name: Restore verified native media build
         id: media-cache
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: vendor/media
           key: native-media-${{ runner.os }}-x64-${{ hashFiles('docs/media-runtime.json', 'scripts/rebuild-media-portable.sh') }}
       - name: Install Linux media build tools
         if: runner.os == 'Linux' && steps.media-cache.outputs.cache-hit != 'true'
         run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build pkg-config nasm
+      - name: Prepare Windows media build environment
+        if: runner.os == 'Windows' && steps.media-cache.outputs.cache-hit != 'true'
+        id: msys2
+        uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e # v2
+        with:
+          msystem: MINGW64
+          path-type: inherit
+      - name: Use the primary MSYS2 package server
+        if: runner.os == 'Windows' && steps.media-cache.outputs.cache-hit != 'true'
+        shell: msys2 {0}
+        run: |
+          printf 'Server = https://repo.msys2.org/mingw/$arch/\n' > /etc/pacman.d/mirrorlist.mingw
+          printf 'Server = https://repo.msys2.org/msys/$arch/\n' > /etc/pacman.d/mirrorlist.msys
       - name: Install Windows media build tools
         if: runner.os == 'Windows' && steps.media-cache.outputs.cache-hit != 'true'
         uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e # v2
         with:
           msystem: MINGW64
           path-type: inherit
+          release: false
+          location: ${{ steps.msys2.outputs.msys2-location }}
           update: true
           install: base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-pkgconf mingw-w64-x86_64-nasm
       - name: Build verified Linux media tools from pinned sources
@@ -75,7 +90,7 @@ jobs:
         run: npm run media:setup -- --sources-only
       - name: Save verified native media build
         if: steps.media-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: vendor/media
           key: ${{ steps.media-cache.outputs.cache-primary-key }}

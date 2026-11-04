@@ -53,8 +53,13 @@ if (!sourcesOnly && !buildNative) {
 }
 const sources = path.join(root, "sources");
 await fs.mkdir(sources, { recursive: true });
+const sourcesForBuild = buildNative
+  ? manifest.sources.filter((item) =>
+      manifest.nativeSources.includes(item.file),
+    )
+  : manifest.sources;
 await Promise.all(
-  manifest.sources.map((item) => download(item, path.join(sources, item.file))),
+  sourcesForBuild.map((item) => download(item, path.join(sources, item.file))),
 );
 // The upstream builder's archive has no license for its scripts. Supply our
 // independent rebuild procedure together with the licensed codec sources.

@@ -70,7 +70,13 @@ export async function copyResources(
   );
   const mediaSources = path.join(resources, "MediaSources");
   await fs.mkdir(mediaSources, { recursive: true });
-  for (const item of manifest.sources) {
+  const sourcesForBuild =
+    platform !== "darwin" && manifest.nativeSources
+      ? manifest.sources.filter((item) =>
+          manifest.nativeSources.includes(item.file),
+        )
+      : manifest.sources;
+  for (const item of sourcesForBuild) {
     if (path.basename(item.file) !== item.file)
       throw new Error("Invalid media source filename.");
     const data = await fs.readFile(

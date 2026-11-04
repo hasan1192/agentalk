@@ -3,6 +3,13 @@
   "release": "https://github.com/AtlasYang/ffmpeg-static-builds/releases/tag/ffmpeg-8.0.3-build4",
   "source": "https://github.com/AtlasYang/ffmpeg-static-builds/tree/ffmpeg-8.0.3-build4",
   "license": "LGPL-2.1-or-later",
+  "nativeSources": [
+    "zlib.tar.gz",
+    "opus.tar.gz",
+    "vpx.tar.gz",
+    "webp.tar.gz",
+    "ffmpeg-8.0.3.tar.xz"
+  ],
   "assets": {
     "linux-arm64": {
       "build": "scripts/rebuild-media-portable.sh",

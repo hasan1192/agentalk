@@ -49,6 +49,9 @@ if [ -n "$mediaSuffix" ]; then
   # zlib's CMake target has a different static library name on MinGW,
   # while its pkg-config file still requests -lz.
   cp "$mediaPrefix/lib/libzlibstatic.a" "$mediaPrefix/lib/libz.a"
+else
+  # Only the private build prefix is affected; force static zlib selection.
+  rm -f "$mediaPrefix"/lib/libz.so*
 fi
 cmake -G Ninja -S "$mediaBuildDirectory/src/opus" -B "$mediaBuildDirectory/opus-build" \
   -DCMAKE_INSTALL_PREFIX="$mediaPrefix" -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_BUILD_TYPE=Release \

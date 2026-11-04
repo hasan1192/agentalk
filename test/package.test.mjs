@@ -145,3 +145,26 @@ test("portable package rejects restricted media configurations", async (t) => {
     /configured LGPL build/,
   );
 });
+
+test("native package requires only its matching source subset", async (t) => {
+  const { base, resources, write } = await fixture(t);
+  const manifest = JSON.parse(
+    await fs.readFile(path.join(base, "docs/media-runtime.json"), "utf8"),
+  );
+  manifest.nativeSources = ["source.tar.gz"];
+  manifest.sources.push({
+    file: "unused-macos.tar.gz",
+    sha256: "not-installed",
+  });
+  await write("docs/media-runtime.json", JSON.stringify(manifest));
+  await copyResources(base, resources, "linux", () => "--disable-gpl");
+  await assert.rejects(
+    () => fs.stat(path.join(resources, "MediaSources/unused-macos.tar.gz")),
+    { code: "ENOENT" },
+  );
+  assert(
+    (
+      await fs.stat(path.join(resources, "MediaSources/source.tar.gz"))
+    ).isFile(),
+  );
+});

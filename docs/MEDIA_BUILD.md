@@ -2,7 +2,7 @@
 
 ## Windows and Linux
 
-Windows/Linux portable releases build FFmpeg 8.0.3 directly from the checksum-pinned source archives. The native build links static zlib, libopus, libvpx and libwebp. FFmpeg's built-in decoders/encoders are also available; GPL, nonfree, version3 components and automatic dependency discovery are disabled. Additional source archives remain available for the macOS preview build. No external binary mirror is used on Windows/Linux.
+Windows/Linux portable releases build FFmpeg 8.0.3 directly from the checksum-pinned source archives. The native build links static zlib, libopus, libvpx and libwebp. FFmpeg's built-in decoders/encoders are also available; GPL, nonfree, version3 components and automatic dependency discovery are disabled. Native packages contain these five source archives; macOS uses additional source archives. No external binary mirror is used on Windows/Linux.
 
 On Linux x64, install GCC/G++, make, CMake, Ninja, pkg-config and NASM. On Ubuntu 22.04 these are provided by `build-essential cmake ninja-build pkg-config nasm`. On Windows x64 use an MSYS2 MINGW64 shell with `base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-pkgconf mingw-w64-x86_64-nasm`, with Node.js on `PATH`.
 
