@@ -1,5 +1,9 @@
 Early alpha release of Agentalk, an Electron desktop app for conversations with independent AI characters.
 
+## What's changed
+
+Agentalk now sends its built-in system, audio and media instructions to models in English. Character instructions and chat rules are included in their saved language. Models can return `[WAIT]` to continue waiting without posting a message. The earlier `[BEKLE]` response is also supported.
+
 ## Downloads
 
 - **Windows x64:** extract the entire ZIP and run `Agentalk.exe` inside the extracted folder.

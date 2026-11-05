@@ -299,7 +299,13 @@ test("yerel/uzak adres doğrulama ve yapılandırılmış yanıt kontrolü", () 
       }),
     /anahtarsız/,
   );
-  assert.equal(parseReply("[BEKLE]", "user"), null);
+  for (const marker of ["[WAIT]", "[BEKLE]"]) {
+    assert.equal(parseReply(marker, "user"), null);
+    assert.equal(
+      parseReply(JSON.stringify({ content: marker, to: ["user"] }), "user"),
+      null,
+    );
+  }
   assert.deepEqual(parseReply("Düz yanıt", "user"), {
     content: "Düz yanıt",
     to: ["user"],
@@ -1151,7 +1157,7 @@ test("heartbeat yalnızca yeni teslimleri kontrol eder, boşta model çağırmaz
     vault,
     async (_conn, _key, person, messages) => {
       calls.push({ person: person.id, system: messages[0].content });
-      return { content: "[BEKLE]" };
+      return { content: "[WAIT]" };
     },
   );
   t.after(() => runtime.close());
@@ -1167,8 +1173,11 @@ test("heartbeat yalnızca yeni teslimleri kontrol eder, boşta model çağırmaz
   runtime.resetHeartbeat(chat.id);
   runtime.tick();
   assert.equal(calls.length, 1);
-  assert(calls[0].system.includes("ayrıntılı açıkla"));
+  assert.match(calls[0].system, /Explain your reasoning and examples in detail/);
+  assert.match(calls[0].system, /\[WAIT\]/);
   await waitFor(() => runtime.active.size === 0);
+  assert.equal(store.state.messages.length, 1);
+  assert.equal(store.chat(chat.id).waiting, true);
   store.acceptMessage(a.id, {
     chatId: chat.id,
     content: "Bora'ya bir not",

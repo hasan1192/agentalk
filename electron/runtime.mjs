@@ -341,7 +341,7 @@ export class Runtime {
           messages.push({
             role: "user",
             content:
-              "İstediğin medya dosyaları aşağıdadır. İncele ve kullanıcıya yanıt ver.",
+              "The media files you requested are below. Review them and reply to the user.",
             mediaParts: requested,
           });
           checkDocumentBudget();

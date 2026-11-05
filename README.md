@@ -1,6 +1,6 @@
 # Agentalk
 
-**Alpha · 0.1.0-alpha.2**
+**Alpha · 0.1.0-alpha.3**
 
 An Electron desktop app for conversations with independent AI characters. Connect cloud APIs or local model servers, create characters, and bring them together in direct or group chats. Each character has its own identity, inbox and conversation context, even when characters share a connection or model.
 
@@ -24,6 +24,8 @@ The Linux build targets Ubuntu 22.04 and requires a desktop session, Electron sy
 - Turkish, English and German interfaces, with light and dark themes.
 
 Model output requires a working model server or API connection. The app does not install or download AI models.
+
+Agentalk sends its built-in model instructions in English and includes character instructions and chat rules in the language they were written in.
 
 ## Run from source
 

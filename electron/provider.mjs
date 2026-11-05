@@ -8,6 +8,10 @@ import {
   pcmWav,
 } from "./media-provider.mjs";
 import { messagePieces } from "../src/message-layout.mjs";
+
+const WAIT_REPLY = "[WAIT]";
+const waitReplies = new Set([WAIT_REPLY, "[BEKLE]"]);
+
 export function validateConnection(input) {
   let url;
   try {
@@ -215,7 +219,7 @@ export function buildContext(state, chat, character, source) {
       (m.from === character.id || m.recipients.includes(character.id)),
   );
   const names = Object.fromEntries([
-    ["user", "Kullanıcı"],
+    ["user", "User"],
     ...state.characters.map((c) => [c.id, c.name]),
   ]);
   const roster = chat.participantIds.map((pid) => ({
@@ -227,13 +231,24 @@ export function buildContext(state, chat, character, source) {
     chat.replyStyle ||
     "balanced";
   const habit = {
-    concise: "Yanıtlarını kısa ve somut tut; gereksiz tekrar yapma.",
+    concise: "Keep replies short and concrete. Avoid unnecessary repetition.",
     balanced:
-      "Doğal konuş; gerektiği kadar açıklama yap, gereksiz tekrar yapma.",
+      "Speak naturally. Explain as much as needed and avoid unnecessary repetition.",
     detailed:
-      "Gerekçelerini ve örneklerini ayrıntılı açıkla; konuşmaya somut katkı sun.",
+      "Explain your reasoning and examples in detail. Make concrete contributions to the conversation.",
   }[replyStyle];
-  const system = `Sen ${character.name} (${character.id}) adlı katılımcısın. Rolün: ${character.role}.\n${character.instructions}\nCevap alışkanlığı: ${habit}\nMasa kuralları:\n${chat.rules}\nDiğer katılımcılar: ${JSON.stringify(roster)}.\nSadece sana teslim edilmiş aşağıdaki mesajları biliyorsun. Yeni katkın yoksa yalnızca [BEKLE] yaz. Katılımcılarla konuşmak için yalnızca JSON biçiminde {"content":"mesajın", "to":["user" veya katılımcı kimliği veya "all"]} üret. Özel yanıtın alıcısını açıkça seç. JSON üretemezsen düz metnin son gönderen kişiye gider. Başka kimlik adına yazma.`;
+  const system = `You are the participant ${character.name} (${character.id}). Your role: ${character.role}.
+${character.instructions}
+Reply style: ${habit}
+Chat rules:
+${chat.rules}
+Other participants: ${JSON.stringify(roster)}.
+You only know the messages delivered to you below.
+If you have nothing new to add, output only ${WAIT_REPLY}.
+To send a message, output only JSON in this form: {"content":"your message","to":["user"]}.
+Use "user", participant IDs, or "all" in the "to" array. Choose the recipient explicitly for private replies.
+If you cannot produce JSON, plain text is sent to the most recent sender.
+Do not write on behalf of another identity.`;
   const index = mediaIndex(state, chat, character);
   const selectedIds = selectMedia(
     index,
@@ -245,7 +260,11 @@ export function buildContext(state, chat, character, source) {
     allowed.flatMap((m) => (m.attachments || []).map((a) => [a.id, m.id])),
   );
   const mediaGuide = index.length
-    ? `\nMedya kataloğu (yalnızca erişimine açık içerik): ${JSON.stringify(index.map(({ id, name, kind, messageId, from, time, width, height, duration }) => ({ id, name, kind, messageId, from, time, width, height, duration })))}. Katalog, medya içeriği değildir. Yeni veya açıkça istenen medya çağrıda bulunabilir. Kullanıcı geçmiş medyaya doğal dilde başvurursa uygun kimliği seç; içeriği çağrıda yoksa yalnızca {"inspectMedia":["medya-kimliği"]} üret, dosya içeriği sonraki adımda verilir. İçeriği görmeden analiz uydurma. Mevcut medyayı göndermek için normal JSON yanıtına "attachments":[{"id":"medya-kimliği"}] ekleyebilirsin; boş content ve medya eki geçerlidir.`
+    ? `\nMedia catalog (only items you can access): ${JSON.stringify(index.map(({ id, name, kind, messageId, from, time, width, height, duration }) => ({ id, name, kind, messageId, from, time, width, height, duration })))}.
+The catalog describes media without including the files. New or explicitly requested media may be included in the request.
+If the user refers to earlier media in natural language, choose the matching ID. If the file is missing from the request, output only {"inspectMedia":["media-id"]} to receive it in the next step.
+Do not invent an analysis of media you have not received.
+To send existing media, add "attachments":[{"id":"media-id"}] to your normal JSON reply. An empty "content" value is allowed when you include an attachment.`
     : "";
   const messages = [
     { role: "system", content: system + mediaGuide },
@@ -299,7 +318,7 @@ export function buildContext(state, chat, character, source) {
   if (missingIds.length)
     messages.push({
       role: "user",
-      content: "İncelenmesi istenen medya içerikleri:",
+      content: "Media requested for inspection:",
       mediaIds: missingIds,
     });
   const context = {
@@ -452,7 +471,7 @@ export async function complete(connection, key, character, messages, signal) {
     messages.unshift({
       role: "system",
       content:
-        "Ses yanıtında doğal konuş. JSON şemasını ve teknik etiketleri seslendirme; yanıt doğrudan son gönderene iletilir.",
+        "Speak naturally in audio replies. Do not read out the JSON schema or technical labels. The reply goes directly to the most recent sender.",
     });
   if (connection.adapter === "anthropic") {
     const systemMessages = messages.filter((m) => m.role === "system");
@@ -463,7 +482,7 @@ export async function complete(connection, key, character, messages, signal) {
     for (const msg of chatMessages) {
       const text = Array.isArray(msg.content)
         ? msg.content
-        : (msg.content || "").trim() || "[Boş]";
+        : (msg.content || "").trim() || "[Empty]";
       const role = msg.role === "assistant" ? "assistant" : "user";
       if (
         formatted.length > 0 &&
@@ -482,9 +501,9 @@ export async function complete(connection, key, character, messages, signal) {
       }
     }
     if (formatted.length === 0) {
-      formatted.push({ role: "user", content: "Başla." });
+      formatted.push({ role: "user", content: "Begin." });
     } else if (formatted[0].role !== "user") {
-      formatted.unshift({ role: "user", content: "Konuşmaya katıl." });
+      formatted.unshift({ role: "user", content: "Join the conversation." });
     }
 
     const body = {
@@ -531,7 +550,7 @@ export async function complete(connection, key, character, messages, signal) {
 
     const contents = [];
     for (const msg of chatMessages) {
-      const text = (msg.content || "").trim() || "[Boş]";
+      const text = (msg.content || "").trim() || "[Empty]";
       const role = msg.role === "assistant" ? "model" : "user";
       if (contents.length > 0 && contents[contents.length - 1].role === role) {
         contents[contents.length - 1].parts.push(...(msg.parts || [{ text }]));
@@ -540,7 +559,7 @@ export async function complete(connection, key, character, messages, signal) {
       }
     }
     if (contents.length === 0) {
-      contents.push({ role: "user", parts: [{ text: "Başla." }] });
+      contents.push({ role: "user", parts: [{ text: "Begin." }] });
     }
 
     const body = {
@@ -670,7 +689,7 @@ export async function complete(connection, key, character, messages, signal) {
 
 export function parseReply(raw, fallbackTo) {
   const trimmed = raw.trim();
-  if (trimmed === "[BEKLE]") return null;
+  if (waitReplies.has(trimmed)) return null;
   let object;
   try {
     object = JSON.parse(
@@ -695,7 +714,7 @@ export function parseReply(raw, fallbackTo) {
     object.to.some((x) => typeof x !== "string")
   )
     throw new Error("Modelin mesaj/alıcı biçimi geçersiz. Yanıt yayınlanmadı.");
-  if (object.content.trim() === "[BEKLE]") return null;
+  if (waitReplies.has(object.content.trim())) return null;
   if (
     object.attachments !== undefined &&
     (!Array.isArray(object.attachments) ||
